@@ -10,6 +10,9 @@ viloyatlar = (
     ('Qashqadaryo', "Qashqadaryo"),
 )
 
+
+
+
 # Create your models here.
 
 
