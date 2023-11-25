@@ -41,3 +41,13 @@ class All_Admins(APIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+
+class Delete_Admin(APIView):
+    queryset = Admins.objects.all()
+    # serializer = Forgot_pass()
+
+    def delete(self, request, pk):
+        user = Admins.objects.filter(id=pk)
+        user.delete()
+        return Response({"MSG": "Delete"})
