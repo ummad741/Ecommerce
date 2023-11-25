@@ -11,8 +11,6 @@ viloyatlar = (
 )
 
 
-
-
 # Create your models here.
 
 
@@ -23,7 +21,7 @@ class Users (models.Model):
         regex='d{0,9}', message="Telefon raqamini +998xxxxxxxxx kabi kriting")
     phone = models.CharField(
         validators=[phone_regex], max_length=9, unique=True)
-    password = models.CharField(max_length=20, null=True)
+    password = models.CharField(max_length=255, null=True)
     otp = models.CharField(max_length=4, null=True)
     # bank schet kredit bolsa generatsiya qilib beradi
     idp = models.CharField(max_length=8, null=True)

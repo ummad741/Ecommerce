@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser
+from django.contrib.auth.hashers import make_password, check_password
 # simple libraries
 import random
 # local importing
@@ -63,7 +65,7 @@ class Main_Reg(APIView):
         if user:
             user.name = name
             user.surname = surname
-            user.password = password
+            user.password = make_password(password)
             user.save()
 
             access = AccessToken.for_user(user)
@@ -100,9 +102,10 @@ class Login(APIView):
     def post(self, request):
         phone = request.data.get("phone")
         password = request.data.get("password")
-        log_user = Users.objects.filter(phone=phone, password=password).first()
+        log_user = Users.objects.filter(phone=phone).first()
         print(log_user)
-        if log_user:
+        if log_user and check_password(password, log_user.password):
+            print("if kirdi")
             access = AccessToken.for_user(log_user)
             refresh = RefreshToken.for_user(log_user)
             serializer = Log_user(log_user)
@@ -116,18 +119,27 @@ class Login(APIView):
 
 
 class Change_Password(generics.UpdateAPIView):
-    queryset = Users.objects.all()
-    serializer_class = Change_Srl()
+    queryset = Users.objects.all()  # You can adjust this queryset as needed
+    serializer_class = Change_Srl
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(request_body=Change_Srl)
-    def put(self, request,pk):
-        serializer = Change_Srl(instance=self.request.user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"MSG": "Change your password succsess"})
-        else:
-            return Response(serializer.errors)
+    def update(self, request, pk=None, *args, **kwargs):
+        user = self.get_object()
+
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        if not check_password(old_password, user.password):
+            return Response({"error": "Old password is incorrect."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if new_password != confirm_password:
+            return Response({"error": "New password and confirm password do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.password = make_password(str(new_password))
+        user.save()
+
+        return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
 
 
 class All_Users(APIView):
@@ -170,4 +182,27 @@ class Forgot_Password_step2(APIView):
             user = Users.objects.all().filter(phone=phone, otp=otp).update(password=password)
             return Response({"MSG": "Malades gozal"})
         except:
-            return Response({"MSG": "qalesan"})
+            return Response({"MSG": "Kiromadin"})
+
+
+class Delete_User(APIView):
+    queryset = Users.objects.all()
+    # serializer = Forgot_pass()
+
+    def delete(self, request, pk):
+        user = Users.objects.filter(id=pk)
+        user.delete()
+        return Response({"MSG": "Delete"})
+
+
+class Select_User(APIView):
+    queryset = Users.objects.all()
+    serializer = Show_Users_Srl()
+
+    def get(self, request, pk):
+        selected = Users.objects.filter(id=pk).first()
+        serializer = Show_Users_Srl(selected)
+        if serializer:
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
