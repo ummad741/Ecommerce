@@ -11,6 +11,7 @@ gender = (
     ("Women", "Women"),
     ("Man", "Man"),
 )
+
 # Create your models here.
 
 
@@ -24,8 +25,30 @@ class Admins(models.Model):
     phone = models.CharField(
         validators=[phone_regex], max_length=9, unique=True)
     password = models.CharField(max_length=16)
-
     gender = models.CharField(max_length=10, choices=gender)
 
     def __str__(self) -> str:
         return f"name:{self.name} roll: {self.admins}"
+
+
+class Product(models.Model):
+    categ = (
+        ('Elektronika', 'Elektronika'),
+        ('Maishiy_texnika', 'Maishiy_texnika'),
+        ('Noutbooklar', 'Noutbooklar'),
+        ('Smartfonlar', 'Smartfonlar'),
+        ('Planshetlar', 'Planshetlar')
+    )
+    name = models.CharField(max_length=250, null=True)
+    about = models.TextField(null=True)
+    quantity = models.IntegerField(null=True)
+    cost = models.IntegerField(null=True)
+    category = models.CharField(max_length=250, choices=categ, null=True)
+    color = models.CharField(max_length=13, null=True)
+    image = models.ImageField(upload_to='uploads/rasmlar/', null=True)
+    time = models.DateTimeField(auto_now=True)
+
+    admin = models.ForeignKey(Admins, on_delete=models.CASCADE)
+
+    def str(self):
+        return self.name

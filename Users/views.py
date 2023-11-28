@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import logout
 # simple libraries
 import random
 # local importing
@@ -16,12 +17,15 @@ from .models import *
 from .serializer import *
 
 # Create your views here.
+#! NAMING
+
 otp_generation = random.randint(1111, 9999)
 
 
 class Register_view_step1(APIView):
     queryset = Users.objects.all()
     serializer = Phone_Reg_srl()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=Phone_Reg_srl)
     def post(self, request):
@@ -38,6 +42,7 @@ class Register_view_step1(APIView):
 class Register_step2(APIView):
     queryset = Users.objects.all()
     serializer = Otp_Reg_srl()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=Otp_Reg_srl)
     def post(self, request):
@@ -53,6 +58,7 @@ class Register_step2(APIView):
 class Main_Reg(APIView):
     queryset = Users.objects.all()
     serializer = User_Srl()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=User_Srl)
     def post(self, request):
@@ -97,6 +103,7 @@ class Main_Reg(APIView):
 class Login(APIView):
     queryset = Users.objects.all()
     serializer = Log_user()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=Log_user)
     def post(self, request):
@@ -122,6 +129,7 @@ class Change_Password(generics.UpdateAPIView):
     queryset = Users.objects.all()  # You can adjust this queryset as needed
     serializer_class = Change_Srl
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser,]
 
     def update(self, request, pk=None, *args, **kwargs):
         user = self.get_object()
@@ -158,6 +166,7 @@ class All_Users(APIView):
 class Forgot_Password_step1(APIView):
     queryset = Users.objects.all()
     serializer = Phone_Reg_srl()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=Phone_Reg_srl)
     def post(self, request):
@@ -172,6 +181,7 @@ class Forgot_Password_step1(APIView):
 class Forgot_Password_step2(APIView):
     queryset = Users.objects.all()
     serializer = Forgot_pass()
+    parser_classes = [MultiPartParser,]
 
     @swagger_auto_schema(request_body=Forgot_pass)
     def post(self, request):
@@ -206,3 +216,15 @@ class Select_User(APIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+
+class Logout_users(APIView):
+    queryset = Users.objects.all()
+
+    def get(self, request, pk):
+        user = Users.objects.filter(id=pk).first()
+        if user:
+            logout(request)
+            return Response({"MSG": "Succsess"})
+        else:
+            return Response({"MSG": "error"})
