@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import check_password, make_password
 from .models import *
+from Admins.models import *
 
 
 class Phone_Reg_srl(serializers.ModelSerializer):
@@ -71,3 +72,15 @@ class Show_Users_Srl(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = "__all__"
+
+
+class OrdersSrl(serializers.ModelSerializer):
+    class Meta:
+        model = Orders
+        fields = "__all__"
+
+
+class AllProductsSRL(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'

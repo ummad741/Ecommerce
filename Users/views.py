@@ -10,12 +10,13 @@ from rest_framework import generics
 from rest_framework.parsers import MultiPartParser
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import logout
+# from django.forms.models import model_to_dict
 # simple libraries
 import random
 # local importing
 from .models import *
 from .serializer import *
-
+# from decimal import Decimal
 # Create your views here.
 #! NAMING
 
@@ -228,3 +229,128 @@ class Logout_users(APIView):
             return Response({"MSG": "Succsess"})
         else:
             return Response({"MSG": "error"})
+
+
+### Orders ###
+
+class OrderViews(APIView):
+    queryset = Orders.objects.all()
+    serializer = OrdersSrl
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=OrdersSrl)
+    def post(self, request):
+        re_product = request.data.get("product")
+        re_user = request.data.get('user')
+        user = Users.objects.filter(id=re_user).first()
+        product = Product.objects.filter(id=re_product).first()
+        serializer = OrdersSrl(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
+
+class Calculate_cash_order(APIView):
+    queryset = Orders.objects.all()
+    serializer = OrdersSrl
+    serializer = AllProductsSRL
+
+    def get(self, request, pk):
+        try:
+            order = Orders.objects.filter(id=pk).first()
+        except:
+            return Response({"MSG": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if order:
+            if order.payment == 'cash':
+                product = Product.objects.filter(id=order.product.id).first()
+                cost = int(product.cost)*int(order.quantity)
+                order_srl = OrdersSrl(order)
+                product_srl = AllProductsSRL(product)
+                if order.quantity <= product.quantity:
+                    return Response(
+                        {
+                            "ORDER": order_srl.data,
+                            "PRODUCT": product_srl.data,
+                            "TOTAL": cost,
+                        }
+                    )  # {'product_id': product_id, 'name': product.name, 'cost': cost}
+                else:
+                    return Response({"MSG": "Quantity not available"})
+            elif order.payment == 'credit':
+                product = Product.objects.filter(id=order.product.id).first()
+                credit_cost = int(product.cost)*int(order.quantity)
+                if order.quantity <= product.quantity:
+                    total_cost = credit_cost * \
+                        (pow((1+int(order.product.protsent)),
+                         int(order.period)))/int(order.period)  # ! creditformula 1+protsent**period=cost/period=credit
+                    return Response(
+                        {
+                            "name": product.name,
+                            "TOTAL COST P/MONTH": str(total_cost),
+                        }
+                    )
+
+                else:
+                    return Response({"MSG": "Quantity not available"})
+            else:
+                return Response({"MSG": "bunday tolov turi mavjud emas"})
+        else:
+            return Response({"MSG": "Not found this order"})
+
+
+class Users_Order_all_views(APIView):
+    queryset = Users.objects.all()
+
+    def get(self, request, pk):
+        try:
+            user = Users.objects.filter(id=pk).first()
+        except:
+            return Response()
+        orders = Orders.objects.all().filter(user=user.id)
+        product_ids = [i.product.id for i in orders]
+        products_list = []
+        for i in range(len(product_ids)):
+            products = Product.objects.all().filter(id=product_ids[i])
+            products_list.extend(products)
+
+        serializer = AllProductsSRL(products_list, many=True)
+        return Response(
+            {
+                "USER": {'id': user.id, "name": user.name},
+                "PRODUCTS": serializer.data,
+            }
+        )
+
+
+class Phone_Change_OTP(APIView):
+    queryset = Users.objects.all()
+    serializer = Phone_Reg_srl()
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=Phone_Reg_srl)
+    def post(self, request):
+        phone = request.data.get("phone")
+        user = Users.objects.filter(phone=phone).first()
+        if user:
+            return Response({"OTP": user.otp})
+        else:
+            return Response({"MSG": "Bunday User yoq"})
+
+
+class Phone_Changer(APIView):
+    queryset = Users.objects.all()
+    serializer = Otp_Reg_srl
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=Forgot_pass)
+    def post(self, request):
+        phone = request.data.get("phone")
+        otp = request.data.get("otp")
+        try:
+            user = Users.objects.all().filter(phone=phone, otp=otp).update(phone=phone)
+            return Response({"MSG": "Phone is changed!"})
+        except:
+            return Response({"MSG": "Kiromadin"})

@@ -12,5 +12,10 @@ urlpatterns = [
     path("Forgot/step1/", Forgot_Password_step1.as_view()),
     path("Forgot/step2/", Forgot_Password_step2.as_view()),
     path("Delete/User/<int:pk>/", Delete_User.as_view()),
-    path("Lougout/User/<int:pk>/", Logout_users.as_view())
+    path("Lougout/User/<int:pk>/", Logout_users.as_view()),
+    # Orders
+    path("Orders/Create/", OrderViews.as_view()),
+    path('Orders/Calc/<int:pk>/', Calculate_cash_order.as_view()),
+    path('Orders/show_Orders/<int:pk>/', Users_Order_all_views.as_view()),
+
 ]

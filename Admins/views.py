@@ -157,3 +157,31 @@ class Super_admin_button(APIView):
             return Response({"admin": admin_info}, status=status.HTTP_200_OK)
         else:
             return Response({"MSG": "There is no such admin"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Dashboard(APIView):
+    queryset = Product.objects.all()
+    serealizer = All_products
+
+    def get(self, request):
+        products = Product.objects.all()
+        serializer = All_products(products, many=True)
+        if products:
+            return Response(serializer.data)
+        else:
+            return Response({"MSG": "There is no such product"})
+
+
+# class Create_Products(APIView):
+#     queryset = Product.objects.all()
+#     serializer = All_products
+#     parser_classes = [MultiPartParser,]
+
+#     @swagger_auto_schema(request_body=All_products)
+#     def post(self, request):
+#         serializer = All_products(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         else:
+#             return Response(serializer.errors)

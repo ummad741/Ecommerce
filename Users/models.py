@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
-
+from Admins.models import *
 # CHOOISES
 viloyatlar = (
     ('Toshkent', "Toshkent"),
@@ -10,7 +10,23 @@ viloyatlar = (
     ('Qashqadaryo', "Qashqadaryo"),
 )
 
+payment_ch = (
+    ("cash", "cash"),
+    ("credit", "credit")
+)
 
+time_ch = (
+    (3, 3),
+    (6, 6),
+    (12, 12)
+)
+
+status = (
+    ("Buyurtma qabul qilindi", "Buyurtma qabul qilindi"),
+    ('Buyurtma bekor qilindi', 'Buyurtma bekor qilindi'),
+    ("Buyurtma Tayorlanmoqda", "Buyurtma Tayorlanmoqda"),
+    ("Buyurtma Yetkazildi", "Buyurtma Yetkazildi"),
+)
 # Create your models here.
 
 
@@ -40,3 +56,17 @@ class Users (models.Model):
 
     def __str__(self):
         return f"id:{self.pk}  phone:{self.phone}"
+
+
+class Orders(models.Model):
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    is_buy = models.BooleanField(default=False, null=True, blank=True)
+    quantity = models.IntegerField(default=0,)
+    payment = models.CharField(choices=payment_ch, max_length=8, blank=True)
+    period = models.IntegerField(choices=time_ch, null=True, blank=True)
+    status = models.CharField(choices=status, max_length=30, blank=True)
+
+    def __str__(self):
+        return f"id:{self.pk}  phone:{self.user}"

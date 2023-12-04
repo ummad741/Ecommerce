@@ -42,6 +42,7 @@ class Product(models.Model):
     name = models.CharField(max_length=250, null=True)
     about = models.TextField(null=True)
     quantity = models.IntegerField(null=True)
+    protsent = models.IntegerField(default=0)
     cost = models.IntegerField(null=True)
     category = models.CharField(max_length=250, choices=categ, null=True)
     color = models.CharField(max_length=13, null=True)
