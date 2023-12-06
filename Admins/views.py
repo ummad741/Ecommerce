@@ -55,7 +55,7 @@ class Select_Admins(APIView):
         try:
             selected = Admins.objects.filter(id=pk).first()
         except:
-            return Response({"MSg": "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSg": "Bad request"}, status=400)
         serializer = Crete_Show_Srl(selected)
         if serializer:
             return Response(serializer.data)
@@ -86,7 +86,7 @@ class Login(APIView):
             log_admins = Admins.objects.filter(
                 phone=phone, password=password).first()
         except:
-            return Response({"MSg": "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSg": "Bad request"}, status=400)
         if log_admins:
             serializer = Login_SRL()
             access = AccessToken.for_user(log_admins)
@@ -97,7 +97,7 @@ class Login(APIView):
                 "serializer": serializer.data
             })
         else:
-            return Response({"MSG": "ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "ERROR"}, status=400)
 
 
 class Logout_admins(APIView):
@@ -122,7 +122,7 @@ class Products_check_and_save_views(APIView):
         try:
             admin = Admins.objects.filter(id=pk).first()
         except:
-            return Response({"MSG": "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "Bad request"}, status=400)
 
         if admin.admins == 'admin':
             serializer = All_products(data=request.data)
@@ -132,7 +132,7 @@ class Products_check_and_save_views(APIView):
             else:
                 return Response(serializer.errors)
         else:
-            return Response({"MSG": "you are not an admin"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "you are not an admin"}, status=400)
 
 
 class Super_admin_button(APIView):
@@ -142,7 +142,7 @@ class Super_admin_button(APIView):
         try:
             superadmin = Admins.objects.filter(id=pk).first()
         except:
-            return Response({"MSg": "There is no such admin"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSg": "There is no such admin"}, status=400)
         admin_info = []
         if superadmin.admins == 'Superadmin':
             admins = Admins.objects.filter(admins='admin').all()
@@ -154,9 +154,9 @@ class Super_admin_button(APIView):
                         "Name": i.name,
                         'Product_count': product_count
                     })
-            return Response({"admin": admin_info}, status=status.HTTP_200_OK)
+            return Response({"admin": admin_info}, status=200)
         else:
-            return Response({"MSG": "There is no such admin"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "There is no such admin"}, status=404)
 
 
 class Dashboard(APIView):

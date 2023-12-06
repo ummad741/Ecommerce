@@ -53,7 +53,7 @@ class Register_step2(APIView):
         if check:
             return Response({"MSG": "Succsesfuly"})
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=400)
 
 
 class Main_Reg(APIView):
@@ -84,7 +84,7 @@ class Main_Reg(APIView):
                 "data": User_Srl(user).data
             })
         else:
-            return Response({"MSG": "ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "ERROR"}, status=400)
 
         # user = Users.objects.filter(phone=phone).update(
         #     name=name, surname=surname, password=password)
@@ -123,7 +123,7 @@ class Login(APIView):
                 "serializer": serializer.data
             })
         else:
-            return Response({"MSG": "ERROR"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"MSG": "ERROR"}, status=400)
 
 
 class Change_Password(generics.UpdateAPIView):
@@ -140,15 +140,15 @@ class Change_Password(generics.UpdateAPIView):
         confirm_password = request.data.get('confirm_password')
 
         if not check_password(old_password, user.password):
-            return Response({"error": "Old password is incorrect."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Old password is incorrect."}, status=401)
 
         if new_password != confirm_password:
-            return Response({"error": "New password and confirm password do not match."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "New password and confirm password do not match."}, status=400)
 
         user.password = make_password(str(new_password))
         user.save()
 
-        return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
+        return Response({"message": "Password updated successfully."}, status=200)
 
 
 class All_Users(APIView):
@@ -191,9 +191,9 @@ class Forgot_Password_step2(APIView):
         password = request.data.get("password")
         try:
             user = Users.objects.all().filter(phone=phone, otp=otp).update(password=password)
-            return Response({"MSG": "Malades gozal"})
+            return Response({"MSG": "PASSWORD IS CHANGED!"})
         except:
-            return Response({"MSG": "Kiromadin"})
+            return Response({"MSG": "ERROR"})
 
 
 class Delete_User(APIView):
@@ -223,7 +223,7 @@ class Logout_users(APIView):
     queryset = Users.objects.all()
 
     def get(self, request, pk):
-        user = Users.objects.filter(id=pk).first()
+        user = Users.objects.get(id=pk)
         if user:
             logout(request)
             return Response({"MSG": "Succsess"})
@@ -240,10 +240,10 @@ class OrderViews(APIView):
 
     @swagger_auto_schema(request_body=OrdersSrl)
     def post(self, request):
-        re_product = request.data.get("product")
-        re_user = request.data.get('user')
-        user = Users.objects.filter(id=re_user).first()
-        product = Product.objects.filter(id=re_product).first()
+        # re_product = request.data.get("product")
+        # re_user = request.data.get('user')
+        # user = Users.objects.filter(id=re_user).first()
+        # product = Product.objects.filter(id=re_product).first()
         serializer = OrdersSrl(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -261,7 +261,7 @@ class Calculate_cash_order(APIView):
         try:
             order = Orders.objects.filter(id=pk).first()
         except:
-            return Response({"MSG": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"MSG": "Order not found"}, status=404)
 
         if order:
             if order.payment == 'cash':
@@ -306,51 +306,79 @@ class Users_Order_all_views(APIView):
 
     def get(self, request, pk):
         try:
-            user = Users.objects.filter(id=pk).first()
+            # filter
+            user = Users.objects.get(id=pk)
+            orders = Orders.objects.all().filter(user=user.id)
+            product_ids = [i.product.id for i in orders]
+            products_list = []
+            for i in range(len(product_ids)):
+                products = Product.objects.all().filter(id=product_ids[i])
+                products_list.extend(products)
+
+            serializer = AllProductsSRL(products_list, many=True)
+            return Response(
+                {
+                    "USER": {'id': user.id, "name": user.name},
+                    "PRODUCTS": serializer.data,
+                }
+            )
         except:
-            return Response()
-        orders = Orders.objects.all().filter(user=user.id)
-        product_ids = [i.product.id for i in orders]
-        products_list = []
-        for i in range(len(product_ids)):
-            products = Product.objects.all().filter(id=product_ids[i])
-            products_list.extend(products)
-
-        serializer = AllProductsSRL(products_list, many=True)
-        return Response(
-            {
-                "USER": {'id': user.id, "name": user.name},
-                "PRODUCTS": serializer.data,
-            }
-        )
-
-
-class Phone_Change_OTP(APIView):
-    queryset = Users.objects.all()
-    serializer = Phone_Reg_srl()
-    parser_classes = [MultiPartParser,]
-
-    @swagger_auto_schema(request_body=Phone_Reg_srl)
-    def post(self, request):
-        phone = request.data.get("phone")
-        user = Users.objects.filter(phone=phone).first()
-        if user:
-            return Response({"OTP": user.otp})
-        else:
-            return Response({"MSG": "Bunday User yoq"})
+            return Response({'Error': 'User not found'}, status=404)
 
 
 class Phone_Changer(APIView):
     queryset = Users.objects.all()
-    serializer = Otp_Reg_srl
+    serializer = Change_SRL
     parser_classes = [MultiPartParser,]
 
-    @swagger_auto_schema(request_body=Forgot_pass)
-    def post(self, request):
-        phone = request.data.get("phone")
-        otp = request.data.get("otp")
+    @swagger_auto_schema(request_body=Change_SRL)
+    def patch(self, request, pk):
         try:
-            user = Users.objects.all().filter(phone=phone, otp=otp).update(phone=phone)
-            return Response({"MSG": "Phone is changed!"})
+            user = Users.objects.get(pk=pk)
+            serializer = Change_SRL(data=request.data)
+            if serializer.is_valid():
+                change_phone = request.data.get('change_phone')
+                if len(change_phone) >= 9 and user.phone != change_phone:
+                    user.phone = change_phone
+                    user.save()
+                    return Response({'MSG': 'Successfully updated phone number'})
+                else:
+                    return Response({'Error': 'phone is not valid'}, status=404)
+            else:
+                return Response(serializer.errors)
         except:
-            return Response({"MSG": "Kiromadin"})
+            return Response({'Error': 'User not found'}, status=404)
+
+
+class CardUser(APIView):
+    queryset = Users.objects.all()
+    serializer = CardUserSrl
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=CardUserSrl)
+    def patch(self, request, pk):
+        try:
+            user = Users.objects.get(pk=pk)
+        except:
+            return Response({'Error': 'User not found'}, status=404)
+        user.idp = request.data.get('idp', user.idp)
+        user.seria = request.data.get('seria', user.seria)
+        user.raqam = request.data.get('raqam', user.raqam)
+        user.pasport = request.data.get('pasport', user.pasport)
+        user.image = request.data.get('image', user.image)
+        user.card = request.data.get('card', user.card)
+        user.card_number = request.data.get('card_number', user.card_number)
+        user.addres = request.data.get('addres', user.addres)
+        user.viloyat = request.data.get('viloyat', user.viloyat)
+        user.save()
+
+        return Response({'Success': 'User updated successfully'}, status=200)
+
+
+class PaymentSystemViews(APIView):
+    queryset = Users.objects.all()
+    serializer = CardUserSrl
+    parser_classes = [MultiPartParser,]
+
+    def post(self, request, pk):
+        pass

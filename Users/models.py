@@ -36,7 +36,8 @@ class Users (models.Model):
     phone_regex = RegexValidator(
         regex='d{0,9}', message="Telefon raqamini +998xxxxxxxxx kabi kriting")
     phone = models.CharField(
-        validators=[phone_regex], max_length=9, unique=True)
+        validators=[phone_regex], max_length=9, unique=True
+    )
     password = models.CharField(max_length=255, null=True)
     otp = models.CharField(max_length=4, null=True)
     # bank schet kredit bolsa generatsiya qilib beradi
@@ -45,10 +46,10 @@ class Users (models.Model):
     raqam = models.CharField(max_length=7, null=True)
     pasport = models.FileField(
         upload_to="uploads/pasports", null=True, blank=True)
-    image = models.FileField(upload_to="uploads/image", null=True, blank=True)
+    image = models.ImageField(upload_to="uploads/image", null=True, blank=True)
     card = models.CharField(max_length=4, null=True,
                             blank=True)  # amal qilish mudati
-    card_number = models.CharField(max_length=20, null=True, blank=True)
+    card_number = models.CharField(max_length=16, null=True, blank=True)
     addres = models.TextField()
 
     viloyat = models.CharField(
@@ -70,3 +71,4 @@ class Orders(models.Model):
 
     def __str__(self):
         return f"id:{self.pk}  phone:{self.user}"
+# card + bosilganda is_buy true boladi va korzinkaga tushadi qachon tolov bogandan keyin status buyurtma qabul qilindiga aylanadi viloyat bizaga uzoroda bosa kun kopro berilishi mumkun

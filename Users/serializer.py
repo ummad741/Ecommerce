@@ -84,3 +84,20 @@ class AllProductsSRL(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
+
+class Change_SRL(serializers.ModelSerializer):
+    change_phone = serializers.CharField()
+
+    class Meta:
+        model = Users
+        fields = ('change_phone',)
+
+
+class CardUserSrl(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = (
+            'idp', 'seria', 'raqam', 'pasport',
+            'image', 'card', 'card_number', 'addres', 'viloyat'
+        )
