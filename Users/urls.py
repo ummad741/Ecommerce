@@ -15,6 +15,7 @@ urlpatterns = [
     path("Show/AllUsers/", All_Users.as_view()),
     path("Show/SelectUsers/", Select_User.as_view()),
     path("Delete/User/<int:pk>/", Delete_User.as_view()),
+    path('Delete/User/Order/<int:pk>/', User_order_all_delete.as_view()),
     # Orders
     path("Orders/Create/", OrderViews.as_view()),
     path('Orders/Calc/<int:pk>/', Calculate_cash_order.as_view()),

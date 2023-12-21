@@ -39,8 +39,9 @@ class Product(models.Model):
         ('Smartfonlar', 'Smartfonlar'),
         ('Planshetlar', 'Planshetlar')
     )
-    name = models.CharField(max_length=250, null=True)
-    about = models.TextField(null=True)
+    # shotda title bilan tableni ulab ketsa boladi lekin keyinchali update qilishim mumkun
+    title = models.CharField(max_length=250, null=True, unique=True)
+    description = models.TextField(null=True)
     quantity = models.IntegerField(null=True)
     protsent = models.IntegerField(default=0)
     cost = models.IntegerField(null=True)

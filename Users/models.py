@@ -63,7 +63,10 @@ class Orders(models.Model):
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # sotib olindi bosa true or false
     is_buy = models.BooleanField(default=False, null=True, blank=True)
+    # maxsulot savatda bor bosa True or False
+    in_basket = models.BooleanField(default=False, null=True, blank=True)
     quantity = models.IntegerField(default=0,)
     payment = models.CharField(choices=payment_ch, max_length=8, blank=True)
     period = models.IntegerField(choices=time_ch, null=True, blank=True)

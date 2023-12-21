@@ -252,6 +252,55 @@ class OrderViews(APIView):
             return Response(serializer.errors)
 
 
+class Phone_Changer(APIView):
+    queryset = Users.objects.all()
+    serializer = Change_SRL
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=Change_SRL)
+    def patch(self, request, pk):
+        try:
+            user = Users.objects.get(pk=pk)
+            serializer = Change_SRL(data=request.data)
+            if serializer.is_valid():
+                change_phone = request.data.get('change_phone')
+                if len(change_phone) >= 9 and user.phone != change_phone:
+                    user.phone = change_phone
+                    user.save()
+                    return Response({'MSG': 'Successfully updated phone number'})
+                else:
+                    return Response({'Error': 'phone is not valid'}, status=404)
+            else:
+                return Response(serializer.errors)
+        except:
+            return Response({'Error': 'User not found'}, status=404)
+
+
+class CardUser(APIView):
+    queryset = Users.objects.all()
+    serializer = CardUserSrl
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=CardUserSrl)
+    def patch(self, request, pk):
+        try:
+            user = Users.objects.get(pk=pk)
+        except:
+            return Response({'Error': 'User not found'}, status=404)
+        user.idp = request.data.get('idp', user.idp)
+        user.seria = request.data.get('seria', user.seria)
+        user.raqam = request.data.get('raqam', user.raqam)
+        user.pasport = request.data.get('pasport', user.pasport)
+        user.image = request.data.get('image', user.image)
+        user.card = request.data.get('card', user.card)
+        user.card_number = request.data.get('card_number', user.card_number)
+        user.addres = request.data.get('addres', user.addres)
+        user.viloyat = request.data.get('viloyat', user.viloyat)
+        user.save()
+
+        return Response({'Success': 'User updated successfully'}, status=200)
+
+
 class Calculate_cash_order(APIView):
     queryset = Orders.objects.all()
     serializer = OrdersSrl
@@ -310,6 +359,7 @@ class Users_Order_all_views(APIView):
             user = Users.objects.get(id=pk)
             orders = Orders.objects.all().filter(user=user.id)
             product_ids = [i.product.id for i in orders]
+            print(product_ids)
             products_list = []
             for i in range(len(product_ids)):
                 products = Product.objects.all().filter(id=product_ids[i])
@@ -326,53 +376,24 @@ class Users_Order_all_views(APIView):
             return Response({'Error': 'User not found'}, status=404)
 
 
-class Phone_Changer(APIView):
-    queryset = Users.objects.all()
-    serializer = Change_SRL
+class User_order_all_delete(APIView):
+    queryset1 = Users.objects.all()
+    queryset2 = Orders.objects.all()
     parser_classes = [MultiPartParser,]
 
-    @swagger_auto_schema(request_body=Change_SRL)
-    def patch(self, request, pk):
+    @swagger_auto_schema(request_body=DeleteOrderSrl)
+    def delete(self, request, pk):
+        re_id = request.data.get("id")
         try:
-            user = Users.objects.get(pk=pk)
-            serializer = Change_SRL(data=request.data)
-            if serializer.is_valid():
-                change_phone = request.data.get('change_phone')
-                if len(change_phone) >= 9 and user.phone != change_phone:
-                    user.phone = change_phone
-                    user.save()
-                    return Response({'MSG': 'Successfully updated phone number'})
-                else:
-                    return Response({'Error': 'phone is not valid'}, status=404)
-            else:
-                return Response(serializer.errors)
-        except:
-            return Response({'Error': 'User not found'}, status=404)
-
-
-class CardUser(APIView):
-    queryset = Users.objects.all()
-    serializer = CardUserSrl
-    parser_classes = [MultiPartParser,]
-
-    @swagger_auto_schema(request_body=CardUserSrl)
-    def patch(self, request, pk):
-        try:
-            user = Users.objects.get(pk=pk)
-        except:
-            return Response({'Error': 'User not found'}, status=404)
-        user.idp = request.data.get('idp', user.idp)
-        user.seria = request.data.get('seria', user.seria)
-        user.raqam = request.data.get('raqam', user.raqam)
-        user.pasport = request.data.get('pasport', user.pasport)
-        user.image = request.data.get('image', user.image)
-        user.card = request.data.get('card', user.card)
-        user.card_number = request.data.get('card_number', user.card_number)
-        user.addres = request.data.get('addres', user.addres)
-        user.viloyat = request.data.get('viloyat', user.viloyat)
-        user.save()
-
-        return Response({'Success': 'User updated successfully'}, status=200)
+            user = Users.objects.get(id=pk)
+        except Users.DoesNotExist:
+            return Response('User not found', status=404)
+        orders = Orders.objects.all().filter(user=user)
+        if orders.filter(product_id=re_id).exists():
+            orders.filter(product_id=re_id).delete
+            return Response("Delete successful")
+        else:
+            return Response('Order not found', status=404)
 
 
 class PaymentSystemViews(APIView):
@@ -382,3 +403,4 @@ class PaymentSystemViews(APIView):
 
     def post(self, request, pk):
         pass
+# card + bosilganda is_buy true boladi va korzinkaga tushadi qachon tolov bogandan keyin status buyurtma qabul qilindiga aylanadi viloyat bizaga uzoroda bosa kun kopro berilishi mumkun

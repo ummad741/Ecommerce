@@ -94,6 +94,12 @@ class Change_SRL(serializers.ModelSerializer):
         fields = ('change_phone',)
 
 
+class DeleteOrderSrl(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('title',)
+
+
 class CardUserSrl(serializers.ModelSerializer):
     class Meta:
         model = Users
